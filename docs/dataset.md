@@ -13,7 +13,6 @@
                     {
                         "id": "1",
                         "title": "Власти продлили «дачную амнистию». Разбираемся в нововведениях с NN.RU",
-                        "title_xpath": "body > class-14 > .header",
                         "date": "2021-01-26 07:30:00",
                         "url": "https://www.nn.ru/text/realty/2021/01/26/69724161/",
                         "topics": ["недвижимость"], <- Optional. 4 module -> skip-topics=True

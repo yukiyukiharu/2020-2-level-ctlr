@@ -57,6 +57,6 @@ perform morphological analysis using various NLP libraries.
  
 ## Resources
 
-1. Academic performance: [link]() 
-1. Media websites list: [link]()
-1. Python programming course from previous semester: [link]()
+1. Academic performance: [link](https://docs.google.com/spreadsheets/d/1qM5Drt8Us6QewWRo7n6k_TqlgoA-F9jrtvHNzrZzHM4/edit?usp=sharing) 
+1. Media websites list: [link](https://drive.google.com/file/d/13daSXTD6S-LIr0oNLBz6XeA74ZwYYsQp/view?usp=sharing)
+1. Python programming course from previous semester: [link](https://github.com/fipl-hse/2020-2-level-labs)
