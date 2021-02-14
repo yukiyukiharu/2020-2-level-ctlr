@@ -46,7 +46,7 @@ perform morphological analysis using various NLP libraries.
 ## Technical solution
 
 | Module | Description | Component | I need to know them, if I want to get at least |
-|:---|:---|
+|:---|:---|:---|:---|
 | [requests]() | module for downloading web pages | scrapper | 4 |
 | [BeautifulSoup]() | module for finding information on web pages | scrapper | 4 |
 | [lxml]() | module for parsing HTML as a structure | scrapper | 6 |
