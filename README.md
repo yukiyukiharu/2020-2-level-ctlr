@@ -54,6 +54,13 @@ perform morphological analysis using various NLP libraries.
 | [pymorphy2]() | module for morphological analysis | pipeline | 8 |
 | [pandas]() | module for table data analysis | pipeline | 10 |
 
+Software solution is built on top of three components:
+1. [scrapper.py](./scrapper.py) - a module for finding articles from the given media, extracting text and
+   dumping it to the filesystem. Students need to implement it.
+1. [pipeline.py](./pipeline.py) - a module for processing text: point-of-speech tagging and 
+   basic morphological analysis. Students need to implement it.
+1. [article.py](./article.py) - a module for article abstraction to incapsulate low-level
+   manipulations with the article
  
 ## Resources
 
