@@ -83,4 +83,5 @@ would mean that you have made tasks for mark `6` and request mentors to check if
    1. all requirements for the mark **8**
    1. scrapper can visit all website pages while config contains only one seed.
 
-> NOTE: date should be in the special format. Read dataset description for technical details
+> NOTE: date should be in the special format. Read [dataset description](./dataset.md) 
+> for technical details
