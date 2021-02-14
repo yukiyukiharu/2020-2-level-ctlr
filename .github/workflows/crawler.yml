@@ -1,0 +1,343 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Corpus Collection and Annotation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  code-style:
+    name: Code Style
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements_qa.txt
+        pip install -r requirements.txt
+        echo "TODO: PR name [skip-ci-name]"
+    - name: Code Syle
+      run: |
+        chmod +x config/run-lint.sh
+        config/run-lint.sh
+  
+  checking-crawler-config:
+    name: Crawler checks config
+    needs: [ code-style ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements_qa.txt
+        pip install -r requirements.txt
+    - name: Run crawler config checks
+      run: |
+        python -m unittest config/crawler_config_test.py
+
+  collecting-articles-from-internet:
+    name: Download articles
+    needs: [ code-style ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements_qa.txt
+        pip install -r requirements.txt
+    - name: Crawl a raw dataset from web
+      run: |
+        chmod +x config/collect-articles-from-internet.sh
+        config/collect-articles-from-internet.sh
+        ls -la tmp/articles
+    - name: Archive raw dataset
+      uses: actions/upload-artifact@v2
+      with:
+        name: raw-dataset
+        path: |
+          tmp/articles
+        retention-days: 40
+  
+  checking-articles-dataset:
+    name: Validate dataset
+    needs: [ checking-crawler-config, collecting-articles-from-internet ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements_qa.txt
+        pip install -r requirements.txt
+    - name: Download previously collected dataset
+      uses: actions/download-artifact@v2
+      with:
+        name: raw-dataset
+    - name: Run metadata validation
+      run: |
+        mkdir -p tmp/articles
+        mv *_meta.json tmp/articles
+        mv *_raw.txt tmp/articles
+        chmod +x config/check-raw-data.sh
+        config/check-raw-data.sh
+  
+  milestone-1-crawler-is-working:
+    name: Crawler is accepted!
+    needs: [ checking-articles-dataset ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    steps:
+    - name: Congratulations
+      run: |
+        echo "Crawler is working. Proceed to text processing pipeline."
+
+  checking-raw-dataset-before-running-pipeline:
+    name: Pipe verifies dataset
+    needs: milestone-1-crawler-is-working
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements_qa.txt
+        pip install -r requirements.txt
+    - name: Download previously collected dataset
+      uses: actions/download-artifact@v2
+      with:
+        name: raw-dataset
+    - name: Run crawler config checks
+      run: |
+        mkdir -p tmp/articles
+        mv *_meta.json tmp/articles
+        mv *_raw.txt tmp/articles
+        python -m unittest config/raw_dataset_test.py
+
+  checking-student-processing-works-for-admin-dataset:
+    name: Pipe processed admin data
+    needs: milestone-1-crawler-is-working
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements_qa.txt
+        pip install -r requirements.txt
+    - name: Download previously collected dataset
+      uses: actions/download-artifact@v2
+      with:
+        name: raw-dataset
+    - name: Run metadata validation
+      run: |
+        mkdir -p tmp/articles
+        mv *_meta.json tmp/articles
+        mv *_raw.txt tmp/articles
+        chmod +x config/reference-text-preprocess.sh
+        config/reference-text-preprocess.sh
+        ls -la tmp/articles
+
+  run-student-processing:
+    name: Pipe processed student data
+    needs: milestone-1-crawler-is-working
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements_qa.txt
+        pip install -r requirements.txt
+    - name: Download previously collected dataset
+      uses: actions/download-artifact@v2
+      with:
+        name: raw-dataset
+    - name: Run validation of `_processed.txt` files
+      run: |
+        mkdir -p tmp/articles
+        mv *_meta.json tmp/articles
+        mv *_raw.txt tmp/articles
+        python pipeline.py
+        ls -la tmp/articles
+    - name: Archive processed dataset
+      uses: actions/upload-artifact@v2
+      with:
+        name: processed-dataset
+        path: |
+          tmp/articles
+        retention-days: 40
+  
+  checking-student-processing-works-for-student-dataset:
+    name: Validate final dataset
+    needs: run-student-processing
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements_qa.txt
+        pip install -r requirements.txt
+    - name: Download previously collected dataset
+      uses: actions/download-artifact@v2
+      with:
+        name: processed-dataset
+    - name: Run validation of `_processed.txt` files
+      run: |
+        mkdir -p tmp/articles
+        mv *_meta.json tmp/articles
+        mv *_raw.txt tmp/articles
+        mv *_processed.txt tmp/articles
+        chmod +x config/student-text-preprocess.sh
+        config/student-text-preprocess.sh
+
+  milestone-2-pipeline-is-working:
+    name: Pipeline is accepted!
+    needs: [ 
+      checking-raw-dataset-before-running-pipeline,
+      checking-student-processing-works-for-admin-dataset, 
+      checking-student-processing-works-for-student-dataset 
+    ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    steps:
+    - name: Congratulations
+      run: |
+        echo "Your solution is accepted! Proceed to further tasks from your lecturer."
