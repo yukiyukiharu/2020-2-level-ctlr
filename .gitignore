@@ -132,6 +132,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+
+# macOS
+.DS_Store
+
 # Crawler artifacts
 tmp
 
