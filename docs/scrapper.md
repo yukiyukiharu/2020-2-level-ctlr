@@ -85,3 +85,92 @@ would mean that you have made tasks for mark `6` and request mentors to check if
 
 > NOTE: date should be in the special format. Read [dataset description](./dataset.md) 
 > for technical details
+
+## Implementation tactics
+
+### Stage 0. Choose the media
+
+Start your implementation from selection of the website you are going to scrap.
+Select the website that interests you mostly and if you want to work on a mark
+higher that 4 make sure it exposes all necessary information. Read more in the 
+[course overview](../README.md) in the milestones section.
+
+### Stage 1. Validate config first
+
+Scrapper is configured by a special `crawler_config.json`.
+Very first thing that should happen after scrapper is run is validation of the config.
+
+Interface to implement:
+
+```py
+def validate_config(crawler_path):
+    pass
+```
+
+`crawler_path` is the path to the config of the crawler. It is mandatory to call this
+method with passing a global variable `CRAWLER_CONFIG_PATH` that should be properly
+imported from the `constants.py` module.
+
+Example call:
+
+```py
+seed_urls, max_articles, max_articles_per_seed = validate_config(CRAWLER_CONFIG_PATH)
+```
+
+* `seed_urls` - is a list of URLs specified in the config with a parameter 
+`base_urls`
+* `max_articles` - is a number of articles to retrieve
+specified in the config with a parameter 
+`total_articles_to_find_and_parse`
+* `max_articles_per_seed` - is a number of articles to retrieve
+specified in the config with a parameter 
+`max_number_articles_to_get_from_one_seed`
+
+When config is not correct:
+
+1. one of the following errors is thrown (names of 
+   errors are self-explaining):
+   `IncorrectURLError`, `NumberOfArticlesOutOfRangeError`, 
+   `IncorrectNumberOfArticlesError`, and throw `UnknownConfigError` if
+   any other inconsstency is found.
+2. script immediately finishes execution
+
+### Stage 2. Find necessary number of article URLs
+
+### Stage 2.1 Introduce Crawler abstraction
+
+Crawler is an entity that visits `seed_urls` with the intention to collect
+URLs with articles that should be passed later.
+
+Crawler should be instantiated with the following instruction:
+
+```py
+crawler = Crawler(seed_urls=seed_urls, 
+                  total_max_articles=max_articles, 
+                  max_articles_per_seed = max_articles_per_seed)
+```
+
+Crawler instance saves all constructor arguments in attributes with
+corresponding names. Each instance should also have an
+additional attribute `self.urls`, initialized with empty list.
+
+### Stage 2.2 Implement method for collection of article URLs
+
+Once the crawler is instantiated, it can be started by executing its 
+method:
+
+```py
+crawler.find_articles()
+```
+
+The method should contain logic for iteraring over the list of seeds, 
+downloading them and extracting article URLs from it. As a result, 
+the internal attribute `self.urls`
+should be filled with collected URLs.
+
+> NOTE: crawling should find required number of articles
+
+> NOTE: here the conditions how to find articles on the seed page
+> will vary depending on the selected nespaper.
+
+
