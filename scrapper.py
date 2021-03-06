@@ -26,7 +26,7 @@ class Crawler:
     Crawler implementation
     """
     def __init__(self, seed_urls: list, max_articles: int):
-        pass
+        self.seed_urls = []
 
     @staticmethod
     def _extract_url(article_bs):
@@ -88,4 +88,7 @@ def validate_config(crawler_path):
 
 if __name__ == '__main__':
     # YOUR CODE HERE
-    pass
+    response = requests.get('')
+    print('')
+    sleep (5) #import time first
+    response = request.get
