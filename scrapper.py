@@ -21,6 +21,12 @@ class IncorrectNumberOfArticlesError(Exception):
     """
 
 
+class UnknownConfigError(Exception):
+    """
+    Most general error
+    """
+
+
 class Crawler:
     """
     Crawler implementation
@@ -92,3 +98,4 @@ if __name__ == '__main__':
     print('')
     sleep (5) #import time first
     response = request.get
+    #ILY
