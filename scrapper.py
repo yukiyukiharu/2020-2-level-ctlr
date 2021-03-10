@@ -4,9 +4,11 @@ Crawler implementation
 
 import re
 import os
-import requests
 import json
+import datetime
+import requests
 from bs4 import BeautifulSoup
+from article import Article
 from constants import CRAWLER_CONFIG_PATH, ASSETS_PATH
 
 
@@ -64,6 +66,7 @@ class Crawler:
                 if len(self.found_urls) != self.max_articles \
                         and url+article_url not in self.found_urls:
                     self.found_urls.append(url+article_url)
+        print(f'Found {len(self.found_urls)} links to articles to process')
 
     def get_search_urls(self):
         """
@@ -77,26 +80,33 @@ class ArticleParser:
     ArticleParser implementation
     """
     def __init__(self, full_url: str, article_id: int):
-        pass
+        self.article = Article(url=full_url, article_id=article_id)
 
     def _fill_article_with_text(self, article_soup):
-        pass
+        self.article.text = article_soup.find('dd', class_='text').text
 
     def _fill_article_with_meta_information(self, article_soup):
-        pass
+        self.article.title = article_soup.find('dd', class_='title').text.strip()
+        self.article.author = 'NOT FOUND'
+        self.article.topics = article_soup.find('span', class_='title_text').find_all('a')[1].text
+        self.article.date = self.unify_date_format(article_soup.find('span', class_='title_data').text[-10:])
 
     @staticmethod
     def unify_date_format(date_str):
         """
         Unifies date format
         """
-        pass
+        return datetime.datetime.strptime(date_str, "%d.%m.%Y")
 
     def parse(self):
         """
         Parses each article
         """
-        pass
+        request = requests.get(self.article.url).content
+        soup = BeautifulSoup(request, features='lxml')
+        self._fill_article_with_meta_information(soup)
+        self._fill_article_with_text(soup)
+        self.article.save_raw()
 
 
 def prepare_environment(base_path):
@@ -133,4 +143,7 @@ if __name__ == '__main__':
 
     crawler = Crawler(seed_urls=urls, max_articles=num_articles)
     crawler.find_articles()
-    print(crawler.get_search_urls())
+
+    for _article_id, _article_link in enumerate(crawler.get_search_urls()):
+        parser = ArticleParser(_article_link, _article_id)
+        parser.parse()
