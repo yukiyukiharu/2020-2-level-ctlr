@@ -79,7 +79,7 @@ class TextProcessingPipeline:
         """
         Runs pipeline process scenario
         """
-        for article_id, article in self.corpus_manager.get_articles().items():
+        for article in self.corpus_manager.get_articles().values():
             original_text = article.get_raw_text()
             processed_text = self._process(original_text)
             article.save_processed(' '.join([str(token) for token in processed_text]))
