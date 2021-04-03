@@ -80,7 +80,7 @@ class TextProcessingPipeline:
         Runs pipeline process scenario
         """
         for article in self.corpus_manager.get_articles().values():
-            original_text = article.get_raw_text()
+            original_text = article.get_raw_text().lower()
             processed_text = self._process(original_text)
             article.save_processed(' '.join([str(token) for token in processed_text]))
 
@@ -95,8 +95,8 @@ class TextProcessingPipeline:
         for feature in analyze:
             if 'analysis' not in feature or not feature['analysis']:
                 continue
-            token = MorphologicalToken(feature['analysis'][0]['lex'],
-                                       feature['text'])
+            token = MorphologicalToken(feature['text'],
+                                       feature['analysis'][0]['lex'])
             token.tags = feature['analysis'][0]['gr']
             token.morphy_tags = morph.parse(token.original_word)[0].tag
             tokens.append(token)
