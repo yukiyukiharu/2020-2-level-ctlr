@@ -114,3 +114,4 @@ class Article:
         """
         article_txt_name = "{}_processed.txt".format(self.article_id)
         return os.path.join(ASSETS_PATH, article_txt_name)
+
